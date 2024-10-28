@@ -15,19 +15,56 @@ editor_options:
 ---
 
 
-Load libraries 
+#### Load libraries 
 ```{r}
 library(tidyverse)
 library(sf)
 library(stars)
 library(terra)
+library(zip)
 ```
 
+#### Read in data 
+```{r}
+# Use st_read to read in building data, save as variable building
+building <-st_read(here::here("data", "gis_osm_buildings_a_free_1.gpkg"))
 
+# Use st_read to read in road data, save as variable roads
+roads <-st_read(here::here("data", "gis_osm_roads_free_1.gpkg"))
 
+# Use rast from the terra package to read in tile h08v05 date 02/07/21, save as variable tile_8_5_07
+tile_8_5_07 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021038.h08v05.001.2021039064328.tif"))
 
+# Use rast from the terra package to read in tile h08v06 date 02/07/21, save as variable tile_8_6_07
+tile_8_6_07 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021038.h08v06.001.2021039064329.tif"))
 
+# Use rast from the terra package to read in tile h08v05 date 02/16/21, save as variable tile_8_5_16
+tile_8_5_16 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v05.001.2021048091106.tif"))
 
+# Use rast from the terra package to read in tile h08v06 date 02/16/21, save as variable tile_8_6_16
+tile_8_6_16 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v06.001.2021048091105.tif"))
+
+# Use st_read to read in road data, save as variable 
+texas <-st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"))
+```
+
+```{r, warning=TRUE, message=TRUE}
+# List of your spatial objects
+spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, tile_8_6_16, texas)
+
+# Loop through the list and check CRS
+for (i in 1:length(spatial_objects)) {
+  if (!(st_crs(spatial_objects[[1]]) == st_crs(spatial_objects[[i]]))) {
+    warning(paste("CRS of", names(spatial_objects)[i], "does not match! Consider transforming!"))
+  } else {
+    print(paste("CRS of", names(spatial_objects)[i], "matches!"))
+  }
+}
+
+```
+
+```{r}
+```
 
 
 
