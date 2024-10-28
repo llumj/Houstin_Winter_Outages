@@ -52,26 +52,20 @@ texas <-st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"))
 # List of your spatial objects
 spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, tile_8_6_16, texas)
 
-# Assign temporary names to the list elements
-names(spatial_objects) <- c("building", "roads", "tile_8_5_07", "tile_8_6_07", "tile_8_5_16", "tile_8_6_16", "texas")
-
 # Loop through the list and check CRS
-for (i in seq_along(spatial_objects)) {
-  if (st_crs(spatial_objects[[1]]) != st_crs(spatial_objects[[i]])) {
+for (i in 1:length(spatial_objects)) {
+  if (!(st_crs(spatial_objects[[1]]) == st_crs(spatial_objects[[i]]))) {
     warning(paste("CRS of", names(spatial_objects)[i], "does not match! Consider transforming!"))
   } else {
     print(paste("CRS of", names(spatial_objects)[i], "matches!"))
   }
 }
+
 ```
 
 ```{r}
-tile_merge_07 <- merge(tile_8_5_07, tile_8_6_07)
 ```
 
-```{r}
-
-```
 
 
 
