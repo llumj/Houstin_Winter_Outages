@@ -22,10 +22,11 @@ library(sf)
 library(stars)
 library(terra)
 library(zip)
+library(tmap)
 ```
 
 #### Read in data 
-```{r}
+```{r, fig.width=10, fig.height=8}
 # Use st_read to read in building data, save as variable building
 building <-st_read(here::here("data", "gis_osm_buildings_a_free_1.gpkg"))
 
@@ -66,7 +67,26 @@ for (i in seq_along(spatial_objects)) {
 ```
 
 ```{r}
+# Merge tiles to make one frame 
 tile_merge_07 <- merge(tile_8_5_07, tile_8_6_07)
+tile_merge_16 <- merge(tile_8_5_16, tile_8_6_16)
+
+
+# Set the extent to include just Houston 
+clip <- rast(xmin= -96.5, xmax = -94.5, ymin = 29, ymax = 30.5, resolution = .3, vals = 1)
+
+# Crop tiles to the settings in the variable clip
+tile_merge_07_clip <- crop(tile_merge_07, clip)
+tile_merge_16_clip <- crop(tile_merge_16, clip)
+
+
+diff_rast <- (tile_merge_07_clip - tile_merge_16_clip)
+# Re classify the difference raster (assuming a drop of more than 200 nW cm² sr⁻¹ is a blackout) 
+blackout_raster <- classify(diff_rast, matrix(c(-Inf, -200, 1, -200, Inf, 0), ncol = 3, byrow = TRUE))
+
+tm_shape(blackout_raster) + 
+  tm_raster()
+
 ```
 
 ```{r}
