@@ -23,6 +23,7 @@ library(stars)
 library(terra)
 library(zip)
 library(tmap)
+library(raster)
 ```
 
 #### Read in data 
@@ -45,21 +46,23 @@ tile_8_5_16 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v0
 # Use rast from the terra package to read in tile h08v06 date 02/16/21, save as variable tile_8_6_16
 tile_8_6_16 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v06.001.2021048091105.tif"))
 
+# Use st_read to read in income data
+income <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer = "X19_INCOME")
+
 # Use st_read to read in road data, save as variable 
-texas <-st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"))
+texas_cens <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer = "ACS_2019_5YR_TRACT_48_TEXAS")
+
 ```
 
 ```{r, warning=TRUE, message=TRUE}
 # List of your spatial objects
-spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, tile_8_6_16, texas)
-
-# Assign temporary names to the list elements
-names(spatial_objects) <- c("building", "roads", "tile_8_5_07", "tile_8_6_07", "tile_8_5_16", "tile_8_6_16", "texas")
+spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, tile_8_6_16, texas_cens)
 
 # Loop through the list and check CRS
 for (i in seq_along(spatial_objects)) {
   if (st_crs(spatial_objects[[1]]) != st_crs(spatial_objects[[i]])) {
     warning(paste("CRS of", names(spatial_objects)[i], "does not match! Consider transforming!"))
+    spatial_objects[[i]] <- st_transform(spatial_objects[[i]], crs = st_crs(building))
   } else {
     print(paste("CRS of", names(spatial_objects)[i], "matches!"))
   }
@@ -83,14 +86,21 @@ tile_merge_16_clip <- crop(tile_merge_16, clip)
 diff_rast <- (tile_merge_07_clip - tile_merge_16_clip)
 # Re classify the difference raster (assuming a drop of more than 200 nW cm² sr⁻¹ is a blackout) 
 
+diff_rast_mask <- diff_rast
+
+
 # Assign NA to locations with a drop of less than 200 nW cm² sr⁻¹ 
-diff_rast[diff_rast >= 200] <- 1 
-diff_rast[diff_rast < 200] <- NA
+diff_rast_mask[diff_rast_mask <= 200] <- NA 
 
-# Convert to sf object
-blackout_vector <- st_as_sf(as.polygons(diff_rast, na.rm = TRUE))
+diff_rast_mask_poly <- as.polygons(diff_rast_mask) %>% 
+  st_as_sf()
 
-plot(diff_rast)
+# 
+tm_shape(diff_rast_mask_poly) +
+  tm_fill(col = "#041d46",
+          border.alpha = 0) +  # Correct fill function for polygons
+  tm_layout(bg.color = "#000326")
+
 ```
 
 ```{r}
