@@ -24,6 +24,7 @@ library(terra)
 library(zip)
 library(tmap)
 library(raster)
+library(dplyr)
 ```
 
 #### Read in data 
@@ -52,6 +53,8 @@ income <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer =
 # Use st_read to read in road data, save as variable 
 texas_cens <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer = "ACS_2019_5YR_TRACT_48_TEXAS")
 
+# Read in ejscreen data
+ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"), quiet = TRUE)
 ```
 
 ```{r, warning=TRUE, message=TRUE}
@@ -61,7 +64,6 @@ spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, 
 # Loop through the list and check CRS
 for (i in seq_along(spatial_objects)) {
   if (st_crs(spatial_objects[[1]]) != st_crs(spatial_objects[[i]])) {
-    warning(paste("CRS of", names(spatial_objects)[i], "does not match! Consider transforming!"))
     spatial_objects[[i]] <- st_transform(spatial_objects[[i]], crs = st_crs(building))
   } else {
     print(paste("CRS of", names(spatial_objects)[i], "matches!"))
@@ -69,7 +71,7 @@ for (i in seq_along(spatial_objects)) {
 }
 ```
 
-```{r}
+```{r, fig.width=10, fig.height=8}
 # Merge tiles to make one frame 
 tile_merge_07 <- merge(tile_8_5_07, tile_8_6_07)
 tile_merge_16 <- merge(tile_8_5_16, tile_8_6_16)
@@ -82,28 +84,40 @@ clip <- rast(xmin= -96.5, xmax = -94.5, ymin = 29, ymax = 30.5, resolution = .3,
 tile_merge_07_clip <- crop(tile_merge_07, clip)
 tile_merge_16_clip <- crop(tile_merge_16, clip)
 
-
-diff_rast <- (tile_merge_07_clip - tile_merge_16_clip)
-# Re classify the difference raster (assuming a drop of more than 200 nW cm² sr⁻¹ is a blackout) 
-
-diff_rast_mask <- diff_rast
-
+# Subtract tile day 16 from tile day 7 to created difference raster mask 
+diff_rast_mask <- (tile_merge_07_clip - tile_merge_16_clip)
 
 # Assign NA to locations with a drop of less than 200 nW cm² sr⁻¹ 
 diff_rast_mask[diff_rast_mask <= 200] <- NA 
 
+# Vectorize blackout mask with as.polygons and st_as_sf to make it vector data instead of raster
 diff_rast_mask_poly <- as.polygons(diff_rast_mask) %>% 
   st_as_sf()
 
-# 
-tm_shape(diff_rast_mask_poly) +
-  tm_fill(col = "#041d46",
-          border.alpha = 0) +  # Correct fill function for polygons
-  tm_layout(bg.color = "#000326")
+# Use filter to filter for Harris County 
+houstin <- ejscreen %>% 
+  filter((STATE_NAME == "Texas") & (CNTY_NAME %in% c("Harris County", "Liberty County", "Austin County", "Waller County", "Montgomery County", "Chambers County", "Fort Bend County", "Galveston County", "Brazoria County", "Washington County", "Grimes County", "Burleson County", "Brazos County", "San Jacinto County", "Austin County", "Colorado County", "Matagorda County", "Wharton County", "Jackson County", "Polk County", "Walker County")))
 
+# Map the blackout data
+blackout_map <- tm_shape(houstin, 
+         bbox = diff_rast_mask_poly) + 
+  tm_polygons(fill = "seashell1",
+              col = "grey80") + 
+  tm_shape(diff_rast_mask_poly) +
+  tm_polygons(fill = "brown", 
+              alpha = .7,
+              border.col = NA) + 
+  tm_layout(bg.color = "#E0FFFF") + 
+  tm_title(text = "Blackout Areas Houstin, TX",
+           fontfamily = "fantasy",
+           fontface = "bold",
+           position = c("left", "top"))
+
+print(blackout_map)
 ```
 
 ```{r}
+
 
 ```
 
