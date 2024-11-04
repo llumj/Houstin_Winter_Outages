@@ -52,14 +52,18 @@ income <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer =
 
 # Use st_read to read in road data, save as variable 
 texas_cens <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer = "ACS_2019_5YR_TRACT_48_TEXAS")
+ 
+# Join income with the geo layer
+income_geo <- left_join(texas_cens, income, join_by(GEOID_Data == GEOID))
 
 # Read in ejscreen data
 ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"), quiet = TRUE)
+
 ```
 
 ```{r, warning=TRUE, message=TRUE}
 # List of your spatial objects
-spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, tile_8_6_16, texas_cens)
+spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, tile_8_6_16, texas_cens, ejscreen)
 
 # Loop through the list and check CRS
 for (i in seq_along(spatial_objects)) {
@@ -71,11 +75,21 @@ for (i in seq_along(spatial_objects)) {
 }
 ```
 
+#### Create background map 
+```{r}
+# Use filter to filter for Harris County 
+houstin <- ejscreen %>% 
+  filter((STATE_NAME == "Texas") & (CNTY_NAME %in% c("Harris County", "Liberty County", "Austin County", "Waller County", "Montgomery County", "Chambers County", "Fort Bend County", "Galveston County", "Brazoria County", "Washington County", "Grimes County", "Burleson County", "Brazos County", "San Jacinto County", "Austin County", "Colorado County", "Matagorda County", "Wharton County", "Jackson County", "Polk County", "Walker County", "Hardin County", "Jefferson County", "Tyler County")))
+
+```
+
+
+#### Combine tiles for each day, spatially subset the blackout mask to the Houston area as defined by the following coordinates:
+(-96.5, 29), (-96.5, 30.5), (-94.5, 30.5), (-94.5, 29)
 ```{r, fig.width=10, fig.height=8}
 # Merge tiles to make one frame 
 tile_merge_07 <- merge(tile_8_5_07, tile_8_6_07)
 tile_merge_16 <- merge(tile_8_5_16, tile_8_6_16)
-
 
 # Set the extent to include just Houston 
 clip <- rast(xmin= -96.5, xmax = -94.5, ymin = 29, ymax = 30.5, resolution = .3, vals = 1)
@@ -84,20 +98,70 @@ clip <- rast(xmin= -96.5, xmax = -94.5, ymin = 29, ymax = 30.5, resolution = .3,
 tile_merge_07_clip <- crop(tile_merge_07, clip)
 tile_merge_16_clip <- crop(tile_merge_16, clip)
 
+# make a copy of each and save them to new variables. It is important that I keep values less than 200 for when I make a difference mask 
+tile_merge_07_clip_copy <- tile_merge_07_clip
+tile_merge_16_clip_copy <- tile_merge_16_clip 
+
+# Set values less than 200 nW cm² sr⁻¹ to NA for mapping on top of ejscreen data. This excludes the backgroud from covering the ejscreen data, save as new variable. Note: I am not sure of the minimum light detected for the background. This number came from trial and error
+tile_merge_07_clip_copy[tile_merge_07_clip_copy <= 50] <- NA
+tile_merge_16_clip_copy[tile_merge_16_clip_copy <= 50] <- NA
+
+# Plot both days to compare. This helps understand what the difference mask should look like 
+hou_map_07 <- tm_shape(houstin, 
+         bbox = tile_merge_07_clip) + 
+  tm_polygons(fill = "#000731",
+              col = "#707483",
+              lwd = .3) +
+tm_shape(tile_merge_07_clip_copy) + 
+  tm_raster(palette = c("#bea878", "#fffbf4"),
+            breaks =c(51, 100, 200, 300, 500, 1000, 2000, 4000, 6000, 8000, Inf)) + 
+  tm_layout(bg.color = "#010224",
+            legend.show = FALSE)
+
+hou_map_16 <- tm_shape(houstin, 
+         bbox = tile_merge_16_clip) + 
+  tm_polygons(fill = "#000731",
+              col = "#707483",
+              lwd = .3) +
+tm_shape(tile_merge_16_clip_copy) + 
+  tm_raster(palette = c("#bea878", "#fffbf4"),
+            breaks =c(51, 100, 200, 300, 500, 1000, 2000, 4000, 6000, 8000, Inf)) + 
+  tm_layout(bg.color = "#010224",
+            legend.show = FALSE)
+
+tmap_arrange(hou_map_07, hou_map_16, ncol = 2, asp = 1)
+```
+
+#### find the change in night lights intensity (presumably) caused by the storm
+```{r, fig.width=10, fig.height=8}
 # Subtract tile day 16 from tile day 7 to created difference raster mask 
 diff_rast_mask <- (tile_merge_07_clip - tile_merge_16_clip)
+```
 
+#### reclassify the difference raster, assuming that any location that experienced a drop of more than 200 nW cm-2sr-1 experienced a blackout,
+assign NA to all locations that experienced a drop of less than 200 nW cm-2sr-1 change, vectorize the blackout mask
+```{r, fig.width=10, fig.height=8}
 # Assign NA to locations with a drop of less than 200 nW cm² sr⁻¹ 
 diff_rast_mask[diff_rast_mask <= 200] <- NA 
 
 # Vectorize blackout mask with as.polygons and st_as_sf to make it vector data instead of raster
 diff_rast_mask_poly <- as.polygons(diff_rast_mask) %>% 
   st_as_sf()
+```
+ 
+#### Re-project the cropped blackout dataset to EPSG:3083 (NAD83 / Texas Centric Albers Equal Area)
+```{r}
+# Use st_transform to set crs to Es
+diff_rast_mask_poly_3083 <- st_transform(diff_rast_mask_poly, crs = 3083)
 
-# Use filter to filter for Harris County 
-houstin <- ejscreen %>% 
-  filter((STATE_NAME == "Texas") & (CNTY_NAME %in% c("Harris County", "Liberty County", "Austin County", "Waller County", "Montgomery County", "Chambers County", "Fort Bend County", "Galveston County", "Brazoria County", "Washington County", "Grimes County", "Burleson County", "Brazos County", "San Jacinto County", "Austin County", "Colorado County", "Matagorda County", "Wharton County", "Jackson County", "Polk County", "Walker County")))
+# Confirm the new CRS
+st_crs(diff_rast_mask_poly_3083)
 
+```
+
+
+#### Plot blackout map 
+```{r, fig.width=10, fig.height=8}
 # Map the blackout data
 blackout_map <- tm_shape(houstin, 
          bbox = diff_rast_mask_poly) + 
@@ -108,7 +172,7 @@ blackout_map <- tm_shape(houstin,
               alpha = .7,
               border.col = NA) + 
   tm_layout(bg.color = "#E0FFFF") + 
-  tm_title(text = "Blackout Areas Houstin, TX",
+  tm_title(text = "Blackout Areas Houston, TX",
            fontfamily = "fantasy",
            fontface = "bold",
            position = c("left", "top"))
@@ -116,10 +180,20 @@ blackout_map <- tm_shape(houstin,
 print(blackout_map)
 ```
 
-```{r}
+## Exclude highways from the cropped blackout mask
 
+#### Identify areas within 200m of all highways
+```{r}
+roads_200 <- st_buffer(roads, dist = 5000)
+
+tm_shape(roads) + 
+  tm_lines()
 
 ```
 
 
+Highways may have experienced changes in their night light intensities that are unrelated to the storm. Therefore, you should excluded any locations within 200 meters of all highways in the Houston area.
 
+identify areas within 200m of all highways
+hint: you may need to use st_union
+find areas that experienced blackouts that are further than 200m from a highway
