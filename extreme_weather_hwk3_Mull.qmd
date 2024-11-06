@@ -215,14 +215,31 @@ tm_shape(affected_buildings) +
 
 
 ```
-#### Select Median Income
+#### Select Median Income and Add It To Census Tracts
 ```{r}
 median_income <- income %>%
   select(GEOID, B19013e1)
 
 # Join income with the geo layer
 income_geo <- left_join(texas_cens, median_income, join_by(GEOID_Data == GEOID))
+
+income_geo <- st_transform(income_geo, crs = 3083)
+  
+  
 ```
 
+#### Identify Census Tracts That Experienced Blackouts
+```{r}
+census_blkout <- st_intersects(black_map_no_roads, income_geo)
+
+census_index <- census_blkout %>% 
+  unlist() %>%
+  unique()
+
+census_index <- income_geo[census_index,]
+
+tm_shape(census_index) + 
+  tm_polygons(fill = "skyblue")
+```
 
 
