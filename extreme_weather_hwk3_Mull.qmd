@@ -21,40 +21,41 @@ library(tidyverse)
 library(sf)
 library(stars)
 library(terra)
-library(zip)
 library(tmap)
-library(raster)
 library(dplyr)
 ```
 
 #### Read in data 
 ```{r, fig.width=10, fig.height=8}
 # Use st_read to read in building data, save as variable building
-building <-st_read(here::here("data", "gis_osm_buildings_a_free_1.gpkg"))
+building <- st_read(
+  here::here("data", "gis_osm_buildings_a_free_1.gpkg"),
+  query = "SELECT * FROM gis_osm_buildings_a_free_1
+           WHERE (type IS NULL AND name IS NULL) 
+           OR type IN ('residential', 'apartments', 'house', 'static_caravan', 'detached')"
+)
 
 # Use st_read to read in road data, save as variable roads
-roads <-st_read(here::here("data", "gis_osm_roads_free_1.gpkg"))
+roads <-st_read(here::here("data", "gis_osm_roads_free_1.gpkg"), query = "SELECT * FROM gis_osm_roads_free_1 WHERE fclass='motorway'")
 
 # Use rast from the terra package to read in tile h08v05 date 02/07/21, save as variable tile_8_5_07
-tile_8_5_07 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021038.h08v05.001.2021039064328.tif"))
+tile_8_5_07 <- read_stars(here::here("data", "VNP46A1", "VNP46A1.A2021038.h08v05.001.2021039064328.tif"))
+
 
 # Use rast from the terra package to read in tile h08v06 date 02/07/21, save as variable tile_8_6_07
-tile_8_6_07 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021038.h08v06.001.2021039064329.tif"))
+tile_8_6_07 <- read_stars(here::here("data", "VNP46A1", "VNP46A1.A2021038.h08v06.001.2021039064329.tif"))
 
 # Use rast from the terra package to read in tile h08v05 date 02/16/21, save as variable tile_8_5_16
-tile_8_5_16 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v05.001.2021048091106.tif"))
+tile_8_5_16 <- read_stars(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v05.001.2021048091106.tif"))
 
 # Use rast from the terra package to read in tile h08v06 date 02/16/21, save as variable tile_8_6_16
-tile_8_6_16 <- terra::rast(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v06.001.2021048091105.tif"))
+tile_8_6_16 <- read_stars(here::here("data", "VNP46A1", "VNP46A1.A2021047.h08v06.001.2021048091105.tif"))
 
 # Use st_read to read in income data
 income <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer = "X19_INCOME")
 
 # Use st_read to read in road data, save as variable 
 texas_cens <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer = "ACS_2019_5YR_TRACT_48_TEXAS")
- 
-# Join income with the geo layer
-income_geo <- left_join(texas_cens, income, join_by(GEOID_Data == GEOID))
 
 # Read in ejscreen data
 ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"), quiet = TRUE)
@@ -62,17 +63,9 @@ ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_wi
 ```
 
 ```{r, warning=TRUE, message=TRUE}
-# List of your spatial objects
-spatial_objects <- list(building, roads, tile_8_5_07, tile_8_6_07, tile_8_5_16, tile_8_6_16, texas_cens, ejscreen)
+roads <- st_transform(roads, crs = 3083)
+building <- st_transform(building, crs = 3083)
 
-# Loop through the list and check CRS
-for (i in seq_along(spatial_objects)) {
-  if (st_crs(spatial_objects[[1]]) != st_crs(spatial_objects[[i]])) {
-    spatial_objects[[i]] <- st_transform(spatial_objects[[i]], crs = st_crs(building))
-  } else {
-    print(paste("CRS of", names(spatial_objects)[i], "matches!"))
-  }
-}
 ```
 
 #### Create background map 
@@ -88,15 +81,19 @@ houstin <- ejscreen %>%
 (-96.5, 29), (-96.5, 30.5), (-94.5, 30.5), (-94.5, 29)
 ```{r, fig.width=10, fig.height=8}
 # Merge tiles to make one frame 
-tile_merge_07 <- merge(tile_8_5_07, tile_8_6_07)
-tile_merge_16 <- merge(tile_8_5_16, tile_8_6_16)
+tile_merge_07 <- st_mosaic(tile_8_5_07, tile_8_6_07)
+tile_merge_16 <- st_mosaic(tile_8_5_16, tile_8_6_16)
 
-# Set the extent to include just Houston 
-clip <- rast(xmin= -96.5, xmax = -94.5, ymin = 29, ymax = 30.5, resolution = .3, vals = 1)
+# Define the desired bounding box for Houston
+houston_bbox <- st_bbox(c(xmin = -96.5, xmax = -94.5, ymin = 29, ymax = 30.5), crs = st_crs(tile_merge_07))
 
-# Crop tiles to the settings in the variable clip
-tile_merge_07_clip <- crop(tile_merge_07, clip)
-tile_merge_16_clip <- crop(tile_merge_16, clip)
+# Create a bounding box as an sf object
+houston_sf <- st_as_sfc(houston_bbox) %>%
+  st_transform(st_crs(tile_merge_07))
+
+# Clip the raster using the bounding box
+tile_merge_07_clip <- st_crop(tile_merge_07, houston_sf)
+tile_merge_16_clip <- st_crop(tile_merge_16, houston_sf)
 
 # make a copy of each and save them to new variables. It is important that I keep values less than 200 for when I make a difference mask 
 tile_merge_07_clip_copy <- tile_merge_07_clip
@@ -145,29 +142,22 @@ assign NA to all locations that experienced a drop of less than 200 nW cm-2sr-1 
 diff_rast_mask[diff_rast_mask <= 200] <- NA 
 
 # Vectorize blackout mask with as.polygons and st_as_sf to make it vector data instead of raster
-diff_rast_mask_poly <- as.polygons(diff_rast_mask) %>% 
-  st_as_sf()
+diff_poly_mask <- as.polygons(rast(diff_rast_mask)) %>% 
+  st_as_sf() %>% 
+  st_transform(crs = 3083)
 ```
  
 #### Re-project the cropped blackout dataset to EPSG:3083 (NAD83 / Texas Centric Albers Equal Area)
-```{r}
-# Use st_transform to set crs to Es
-diff_rast_mask_poly_3083 <- st_transform(diff_rast_mask_poly, crs = 3083)
-
-# Confirm the new CRS
-st_crs(diff_rast_mask_poly_3083)
-
-```
 
 
 #### Plot blackout map 
 ```{r, fig.width=10, fig.height=8}
 # Map the blackout data
 blackout_map <- tm_shape(houstin, 
-         bbox = diff_rast_mask_poly) + 
+         bbox = diff_rast_mask) + 
   tm_polygons(fill = "seashell1",
               col = "grey80") + 
-  tm_shape(diff_rast_mask_poly) +
+  tm_shape(diff_rast_mask) +
   tm_polygons(fill = "brown", 
               alpha = .7,
               border.col = NA) + 
@@ -184,16 +174,55 @@ print(blackout_map)
 
 #### Identify areas within 200m of all highways
 ```{r}
-roads_200 <- st_buffer(roads, dist = 5000)
+roads_200 <- st_buffer(roads, dist = 200) %>% 
+  st_union() %>% 
+  st_transform(crs = 3083) %>% 
+  st_make_valid()
+  
+roads_200 <- st_as_sf(roads_200)
 
-tm_shape(roads) + 
-  tm_lines()
+black_map_no_roads <- st_difference(diff_poly_mask, roads_200)
+
+tm_shape(black_map_no_roads) +
+  tm_polygons()
+
 
 ```
 
 
-Highways may have experienced changes in their night light intensities that are unrelated to the storm. Therefore, you should excluded any locations within 200 meters of all highways in the Houston area.
+#### Identify homes likely impacted by blackouts
 
-identify areas within 200m of all highways
-hint: you may need to use st_union
-find areas that experienced blackouts that are further than 200m from a highway
+```{r}
+class(building)
+
+tm_shape(building) + 
+  tm_polygons()
+
+# Find out where they intersect
+blkout_home <- st_intersects(black_map_no_roads, building)
+
+# Unlist the list of homes 
+blkout_index <- blkout_home %>%
+  unlist() %>%
+  unique()
+
+# Subset the buildings data frame to get only the affected buildings
+affected_buildings <- building[blkout_index, ]
+
+# View the affected buildings
+tm_shape(affected_buildings) + 
+  tm_polygons()
+
+
+```
+#### Select Median Income
+```{r}
+median_income <- income %>%
+  select(GEOID, B19013e1)
+
+# Join income with the geo layer
+income_geo <- left_join(texas_cens, median_income, join_by(GEOID_Data == GEOID))
+```
+
+
+
