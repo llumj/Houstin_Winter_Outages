@@ -289,7 +289,7 @@ tracts_no_affect <- income_geo %>%
   filter(!GEOID %in% tracts_affect$GEOID)
 
 # Summary income of homes affected 
-home_inc_no_aff <- ggplot(tracts_no_affect, aes(x = tracts_no_affect$B19013e1)) + geom_histogram()  
+home_inc_no_aff <- ggplot(tracts_no_affect, aes(x = tracts_no_affect$B19013e1)) + geom_histogram()
 
 # Plot 
 home_inc_aff + home_inc_no_aff
