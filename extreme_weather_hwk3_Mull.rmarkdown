@@ -15,20 +15,24 @@ editor_options:
 ---
 
 
+
 #### Load libraries 
+
 ```{r}
 library(tidyverse)
 library(sf)
 library(stars)
 library(terra)
 library(tmap)
-library(dplyr)
+library(htmltools)
+library(knitr)
 library(kableExtra)
-library(patchwork)
 ```
 
+
 #### Read in data 
-```{r, quiet = TRUE}
+
+```{r, fig.width=10, fig.height=8}
 # Use st_read to read in building data, save as variable building
 building <- st_read(
   here::here("data", "gis_osm_buildings_a_free_1.gpkg"),
@@ -60,18 +64,20 @@ income <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer =
 texas_cens <- st_read(here::here("data", "ACS_2019_5YR_TRACT_48_TEXAS.gdb"), layer = "ACS_2019_5YR_TRACT_48_TEXAS")
 
 # Read in ejscreen data for base-map 
-ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"))
+ejscreen <- st_read(here::here("data", "ejscreen", "EJSCREEN_2023_BG_StatePct_with_AS_CNMI_GU_VI.gdb"), quiet = TRUE)
 
 ```
 
-```{r, warning=TRUE}
+```{r, warning=TRUE, message=TRUE}
 roads <- st_transform(roads, crs = 3083)
 building <- st_transform(building, crs = 3083)
 ejscreen <- st_transform(ejscreen, crs = 3083)
 texas_cens <- st_transform(texas_cens, crs = 3083)
 ```
 
+
 #### Create background map 
+
 ```{r}
 # Use filter to filter for counties around houstin, this is for my base-map
 houston <- ejscreen %>% 
@@ -80,8 +86,10 @@ houston <- ejscreen %>%
 ```
 
 
+
 #### Combine tiles for each day, spatially subset the blackout mask to the Houston area as defined by the following coordinates:
 (-96.5, 29), (-96.5, 30.5), (-94.5, 30.5), (-94.5, 29)
+
 ```{r, fig.width=10, fig.height=8}
 # Merge tiles to make one frame for each day, the 7th and the 16th
 tile_merge_07 <- st_mosaic(tile_8_5_07, tile_8_6_07)
@@ -132,14 +140,18 @@ tm_shape(tile_merge_16_copy) +
 tmap_arrange(hou_map_07, hou_map_16, ncol = 2, asp = 1)
 ```
 
+
 #### find the change in night lights intensity (presumably) caused by the storm
+
 ```{r, fig.width=10, fig.height=8}
 # Subtract tile day 16 from tile day 7 to created difference raster mask 
 diff_rast_mask <- (tile_merge_07 - tile_merge_16)
 ```
 
+
 #### Reclassify the difference raster, assuming that any location that experienced a drop of more than 200 nW cm-2sr-1 experienced a blackout,
 assign NA to all locations that experienced a drop of less than 200 nW cm-2sr-1 change, vectorize the blackout mask
+
 ```{r, fig.width=10, fig.height=8}
 # Assign NA to locations with a drop of less than 200 nW cm² sr⁻¹ 
 diff_rast_mask[diff_rast_mask <= 200] <- NA 
@@ -149,11 +161,13 @@ diff_poly_mask <- as.polygons(rast(diff_rast_mask)) %>%
   st_as_sf() %>% 
   st_transform(crs = 3083)
 ```
+
  
 #### Re-project the cropped blackout dataset to EPSG:3083 (NAD83 / Texas Centric Albers Equal Area)
 
 
 #### Plot Blackout Mask
+
 ```{r, fig.width=10, fig.height=8}
 # Map the blackout data
 blackout_map <- tm_shape(houston, 
@@ -173,9 +187,11 @@ blackout_map <- tm_shape(houston,
 print(blackout_map)
 ```
 
+
 ## Exclude highways from the cropped blackout mask
 
 #### Identify areas within 200m of all highways
+
 ```{r}
 # Use st_buffer to make road buffer of 200m, unionize the buffer, transform to 3083 so it matches the mask, make all polygons valid, make simple feature 
 roads_200 <- st_buffer(roads, dist = 200) %>% 
@@ -195,7 +211,9 @@ map_no_roads <- tm_shape(black_map_no_roads) +
 ```
 
 
+
 #### Identify homes likely impacted by blackouts
+
 
 ```{r}
 # Use st_intersects to see which homes were affected by the black out 
@@ -232,34 +250,48 @@ blackout_homes <- tm_shape(houston,
                 type = "fill", 
                 col = "brown") + 
   tm_compass(position = c(.9, .1))
+
+print(blackout_homes) 
+
 ```
 
-#### Estimate the number of homes affected 
+#### Number of houses affected by blackout
 ```{r}
-# Find total of homes affected
-homes_total <- nrow(affected_buildings)
+# Calculate the total number of affected buildings
+total_affected <- nrow(affected_buildings)
 
-# Create a summary data frame 
-summary_table_data <- data.frame( Description = "Total Affected Homes", Total = homes_total)
+# Create a summary data frame
+summary_table <- data.frame(
+  Description = "Total Affected Homes",
+  Total = total_affected
+)
 
-summary_table <- summary_table_data %>% kbl(col.names = c("Description", "Total"), digits = 2) %>% kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
+# Create and customize a kable table with kableExtra
+summary_table %>%
+  kbl(col.names = c("Description", "Total"), digits = 2) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F)
 
-print(summary_table)
 ```
-
 
 #### Select Median Income and Add It To Census Tracts
+
 ```{r}
+# Select median income and GEOID
 median_income <- income %>%
   select(GEOID, B19013e1)
 
 # Join income with the geo layer
 income_geo <- left_join(texas_cens, median_income, join_by(GEOID_Data == GEOID))
 
+# Change crs to 3083
 income_geo <- st_transform(income_geo, crs = 3083)
+  
+  
 ```
 
+
 #### Identify Census Tracts That Experienced Blackouts
+
 ```{r}
 census_blkout <- st_intersects(black_map_no_roads, income_geo)
 
@@ -267,35 +299,23 @@ census_index <- census_blkout %>%
   unlist() %>%
   unique()
 
-tracts_affect <- income_geo[census_index,]
+census_index <- income_geo[census_index,]
 
-census_map <- tm_shape(tracts_affect) + 
-  tm_polygons(fill = "B19013e1",
-              palette = c("lightyellow", "darkgreen"))
+# Check for NA values 
+any(is.na(census_index$B19013e1))
 
+# Replace with 0
+census_index$B19013e1[is.na(census_index$B19013e1)] <- 0
+
+census_index <- st_as_sf(census_index)
+# Assuming your census_index data frame is already loaded 
+census_map <- tm_shape(census_index) +
+  tm_polygons(col = "B19013e1", 
+              palette = "Blues", 
+              title = "Income Distribution by Census Block") +
+  tm_layout(main.title = "Census Index Map")
+
+print(summary(census_index$B19013e1))
 census_map
-```
-
-#### Plot of median household incomes for census tracts affected and not affected
-```{r}
-# Summary income of homes affected 
-home_inc_aff <- ggplot(tracts_affect, aes(x = tracts_affect$B19013e1)) + geom_histogram()
-
-# View 
-home_inc_aff
-
-# Find the number of homes tracts not affected 
-tracts_no_affect <- income_geo %>% 
-  filter(!GEOID %in% tracts_affect$GEOID)
-
-# Summary income of homes affected 
-home_inc_no_aff <- ggplot(tracts_no_affect, aes(x = tracts_no_affect$B19013e1)) + geom_histogram() 
-
-# Plot 
-home_inc_aff + home_inc_no_aff
-
-summary(tracts_affect$B19013e1)
-
-summary(tracts_no_affect$B19013e1)
 ```
 
