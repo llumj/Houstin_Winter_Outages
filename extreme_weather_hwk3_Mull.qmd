@@ -71,8 +71,8 @@ ejscreen <- st_transform(ejscreen, crs = 3083)
 texas_cens <- st_transform(texas_cens, crs = 3083)
 ```
 
-#### Check CRS wit warning
-```{r, warning=TRUE}
+#### Check CRS with warning
+```{r, warning=TRUE, message=TRUE}
 # Check if all CRSes are the same 
 if (!all(st_crs(roads) == st_crs(building), 
          st_crs(building) == st_crs(ejscreen), 
@@ -368,7 +368,8 @@ census_map <- tm_shape(houston,
   tm_shape(tracts_affect) + 
   tm_polygons(fill = "B19013e1",
               palette = c("lightyellow", "darkgreen"), 
-              title = "Median Income") + 
+              title = "Median Income",
+              popup.vars = c("Median Income" = "B19013e1")) + 
   tm_title_out("Median Household Income In The Past 12 Months Of Census Blocks Affected",
                position = c(0, 1),
                size = 1.7,
@@ -402,4 +403,6 @@ home_inc_no_aff <- ggplot(tracts_no_affect,
 # Plot with patchwork
 home_inc_aff + home_inc_no_aff
 ```
+
+Looking at the two histograms, it appears that there is really no difference when it comes to median household income by census block and blackouts. However, I think the way the data is being shown might have some limitations to answering the question posed. One of the main reasons being that census blocks might not be the best way to group the houses. It might actually skew the median household income for the bigger census blocks. For example, lets say 100 low income homes in a census block that lost power out of 1000. If the rest of the homes have higher median incomes, they would be portrayed as being part of the blackout when in reality they were not affected. A different solution would be using a stratified approach that better separates homes and income.
 
