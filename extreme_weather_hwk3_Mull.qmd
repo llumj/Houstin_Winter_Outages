@@ -105,7 +105,11 @@ tile_merge_16_copy <- tile_merge_16
 # Set values less than 200 nW cm² sr⁻¹ to NA for mapping on top of ejscreen data. This excludes the backgroud from covering the ejscreen data, save as new variable. Note: I am not sure of the minimum light detected for the background. This number came from trial and error
 tile_merge_07_copy[tile_merge_07_copy <= 50] <- NA
 tile_merge_16_copy[tile_merge_16_copy <= 50] <- NA
+```
 
+
+#### Map before the storm
+```{r, fig.width=6, fig.height=4}
 # Plot both days to compare. This helps understand what the difference mask should look like 
 hou_map_07 <- tm_shape(houston, 
          bbox = houston_bbox) + 
@@ -113,34 +117,68 @@ hou_map_07 <- tm_shape(houston,
               col = "#707483",
               lwd = .3) +
 tm_shape(tile_merge_07_copy) + 
-  tm_raster(palette = c("#bea878", "#fffbf4"),
-            breaks =c(51, 100, 200, 300, 500, 1000, 2000, 4000, 6000, 8000, Inf)) + 
-  tm_layout(bg.color = "#010224",
-            legend.show = FALSE)
+  tm_raster(palette = c("#bea878", "#fffbf4"), 
+            breaks = c(51, 100, 200, 300, 500, 1000, 2000, 4000, 6000, 8000, Inf), 
+            title = "Radiance (nW cm⁻² sr⁻¹)", 
+            legend.show = TRUE,
+            legend.hist = TRUE) + 
+  tm_layout(bg.color = "#010224", 
+            legend.bg.color = "white", 
+            legend.title.size = 0.8, 
+            legend.text.size = 0.6,
+            legend.outside = TRUE,
+            legend.outside.position = "right",  # Placing legend outside on the right
+            legend.orientation = "vertical",
+            legend.outside.size = 0.2) + 
+  tm_title_out("Radiance Distribution Houston 2021-02-07",
+               position = c(0, 1),
+               size = 1.5,
+               color = "black",
+               fontface = "bold")
 
-hou_map_16 <- tm_shape(houston, 
+hou_map_07
+```
+
+#### Map after the storm 
+```{r, fig.width=6, fig.height=4}
+hou_map_16 <- 
+tm_shape(houston, 
          bbox = houston_bbox) + 
   tm_polygons(fill = "#000731",
               col = "#707483",
               lwd = .3) +
 tm_shape(tile_merge_16_copy) + 
-  tm_raster(palette = c("#bea878", "#fffbf4"),
-            breaks =c(51, 100, 200, 300, 500, 1000, 2000, 4000, 6000, 8000, Inf)) + 
-  tm_layout(bg.color = "#010224",
-            legend.show = FALSE)
+  tm_raster(palette = c("#bea878", "#fffbf4"), 
+            breaks = c(51, 100, 200, 300, 500, 1000, 2000, 4000, 6000, 8000, Inf), 
+            title = "Radiance (nW cm⁻² sr⁻¹)", 
+            legend.show = TRUE,
+            legend.hist = TRUE) + 
+  tm_layout(bg.color = "#010224", 
+            legend.bg.color = "white", 
+            legend.title.size = 0.8, 
+            legend.text.size = 0.6,
+            legend.outside = TRUE,
+            legend.outside.position = "right",  # Placing legend outside on the right
+            legend.orientation = "vertical",
+            legend.outside.size = 0.2) + 
+  tm_title_out("Radiance Distribution Houston 2021-02-16",
+               position = c(0, 1),
+               size = 1.5,
+               color = "black",
+               fontface = "bold")
 
-tmap_arrange(hou_map_07, hou_map_16, ncol = 2, asp = 1)
+hou_map_16
 ```
 
 #### find the change in night lights intensity (presumably) caused by the storm
-```{r, fig.width=10, fig.height=8}
+```{r, fig.width=10, fig.height=8, eval=FALSE}
 # Subtract tile day 16 from tile day 7 to created difference raster mask 
 diff_rast_mask <- (tile_merge_07 - tile_merge_16)
 ```
 
 #### Reclassify the difference raster, assuming that any location that experienced a drop of more than 200 nW cm-2sr-1 experienced a blackout,
 assign NA to all locations that experienced a drop of less than 200 nW cm-2sr-1 change, vectorize the blackout mask
-```{r, fig.width=10, fig.height=8}
+```{r, fig.width=10, fig.height=8, eval=FALSE}
 # Assign NA to locations with a drop of less than 200 nW cm² sr⁻¹ 
 diff_rast_mask[diff_rast_mask <= 200] <- NA 
 
@@ -154,7 +192,7 @@ diff_poly_mask <- as.polygons(rast(diff_rast_mask)) %>%
 
 
 #### Plot Blackout Mask
-```{r, fig.width=10, fig.height=8}
+```{r, fig.width=10, fig.height=8, eval=FALSE}
 # Map the blackout data
 blackout_map <- tm_shape(houston, 
          bbox = diff_rast_mask) + 
@@ -176,7 +214,7 @@ print(blackout_map)
 ## Exclude highways from the cropped blackout mask
 
 #### Identify areas within 200m of all highways
-```{r}
+```{r, eval=FALSE}
 # Use st_buffer to make road buffer of 200m, unionize the buffer, transform to 3083 so it matches the mask, make all polygons valid, make simple feature 
 roads_200 <- st_buffer(roads, dist = 200) %>% 
   st_union() %>% 
@@ -197,7 +235,7 @@ map_no_roads <- tm_shape(black_map_no_roads) +
 
 #### Identify homes likely impacted by blackouts
 
-```{r}
+```{reval=FALSE}
 # Use st_intersects to see which homes were affected by the black out 
 blkout_home <- st_intersects(black_map_no_roads, building)
 
@@ -235,7 +273,7 @@ blackout_homes <- tm_shape(houston,
 ```
 
 #### Estimate the number of homes affected 
-```{r}
+```{r, eval=FALSE}
 # Find total of homes affected
 homes_total <- nrow(affected_buildings)
 
@@ -249,7 +287,7 @@ print(summary_table)
 
 
 #### Select Median Income and Add It To Census Tracts
-```{r}
+```{r, eval=FALSE}
 median_income <- income %>%
   select(GEOID, B19013e1)
 
@@ -260,7 +298,7 @@ income_geo <- st_transform(income_geo, crs = 3083)
 ```
 
 #### Identify Census Tracts That Experienced Blackouts
-```{r}
+```{r, eval=FALSE}
 census_blkout <- st_intersects(black_map_no_roads, income_geo)
 
 census_index <- census_blkout %>% 
@@ -277,7 +315,7 @@ census_map
 ```
 
 #### Plot of median household incomes for census tracts affected and not affected
-```{r}
+```{r, eval=FALSE}
 # Summary income of homes affected 
 home_inc_aff <- ggplot(tracts_affect, aes(x = tracts_affect$B19013e1)) + geom_histogram()
 
