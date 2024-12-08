@@ -1,6 +1,6 @@
 ---
-title: "Homework Assignment #3"
-subtitle: "Exploring patterns of environmental justice"
+title: "Winter Storm Impact on Houston Power Outages"
+subtitle: "Analyzing the 2021 Texas Crisis with Night Lights and Socioeconomic Data"
 author: "Joshua Mull"
 date: last-modified
 execute:
@@ -14,6 +14,7 @@ editor_options:
   chunk_output_type: console
 ---
 
+#### Objective: identify the impacts of these series of extreme winter storms by estimating the number of homes in the Houston metropolitan area that lost power and investigate whether not these impacts were disproportionately felt
 
 #### Load libraries 
 ```{r}
