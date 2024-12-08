@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Joshua Mull">
-<meta name="dcterms.date" content="2024-11-09">
+<meta name="dcterms.date" content="2024-12-08">
 
-<title>Homework Assignment #3</title>
+<title>Winter Storm Impact on Houston Power Outages</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -88,19 +88,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </style>
 
 
-<script src="extreme_weather_hwk3_Mull_files/libs/clipboard/clipboard.min.js"></script>
-<script src="extreme_weather_hwk3_Mull_files/libs/quarto-html/quarto.js"></script>
-<script src="extreme_weather_hwk3_Mull_files/libs/quarto-html/popper.min.js"></script>
-<script src="extreme_weather_hwk3_Mull_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="extreme_weather_hwk3_Mull_files/libs/quarto-html/anchor.min.js"></script>
-<link href="extreme_weather_hwk3_Mull_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="extreme_weather_hwk3_Mull_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="extreme_weather_hwk3_Mull_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="extreme_weather_hwk3_Mull_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="extreme_weather_hwk3_Mull_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="Houstin_Winter_Outage_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Houstin_Winter_Outage_files/libs/quarto-html/quarto.js"></script>
+<script src="Houstin_Winter_Outage_files/libs/quarto-html/popper.min.js"></script>
+<script src="Houstin_Winter_Outage_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Houstin_Winter_Outage_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Houstin_Winter_Outage_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Houstin_Winter_Outage_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Houstin_Winter_Outage_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Houstin_Winter_Outage_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Houstin_Winter_Outage_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
-<script src="extreme_weather_hwk3_Mull_files/libs/kePrint-0.0.1/kePrint.js"></script>
-<link href="extreme_weather_hwk3_Mull_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+<script src="Houstin_Winter_Outage_files/libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="Houstin_Winter_Outage_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
 
 
 </head>
@@ -122,8 +122,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Homework Assignment #3</h1>
-<p class="subtitle lead">Exploring patterns of environmental justice</p>
+<h1 class="title">Winter Storm Impact on Houston Power Outages</h1>
+<p class="subtitle lead">Analyzing the 2021 Texas Crisis with Night Lights and Socioeconomic Data</p>
 </div>
 
 
@@ -140,7 +140,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">November 9, 2024</p>
+      <p class="date">December 8, 2024</p>
     </div>
   </div>
   
@@ -150,6 +150,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
+<section id="objective-identify-the-impacts-of-these-series-of-extreme-winter-storms-by-estimating-the-number-of-homes-in-the-houston-metropolitan-area-that-lost-power-and-investigate-whether-not-these-impacts-were-disproportionately-felt" class="level4">
+<h4 class="anchored" data-anchor-id="objective-identify-the-impacts-of-these-series-of-extreme-winter-storms-by-estimating-the-number-of-homes-in-the-houston-metropolitan-area-that-lost-power-and-investigate-whether-not-these-impacts-were-disproportionately-felt">Objective: identify the impacts of these series of extreme winter storms by estimating the number of homes in the Houston metropolitan area that lost power and investigate whether not these impacts were disproportionately felt</h4>
+</section>
 <section id="load-libraries" class="level4">
 <h4 class="anchored" data-anchor-id="load-libraries">Load libraries</h4>
 <div class="cell">
@@ -312,7 +315,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(hou_map_07)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="576"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="576"></p>
 </div>
 </div>
 </section>
@@ -352,7 +355,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(hou_map_16)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="576"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="576"></p>
 </div>
 </div>
 </section>
@@ -413,7 +416,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(blackout_map)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="960"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="960"></p>
 </div>
 </div>
 </section>
@@ -441,7 +444,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(map_no_roads)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -490,7 +493,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(blackout_homes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <section id="a-quick-2x2-mile-view-because-you-can-see-all-the-little-buildings-which-is-cool" class="level4">
@@ -519,7 +522,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(zoomed_map)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -611,7 +614,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>census_map</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
@@ -640,10 +643,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>home_inc_aff <span class="sc">+</span> home_inc_no_aff</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="extreme_weather_hwk3_Mull_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="960"></p>
+<p><img src="Houstin_Winter_Outage_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="960"></p>
 </div>
 </div>
 <p>Looking at the two histograms, it appears that there is really no difference when it comes to median household income by census block and blackouts. However, I think the way the data is being shown might have some limitations to answering the question posed. One of the main reasons being that census blocks might not be the best way to group the houses. It might actually skew the median household income for the bigger census blocks. For example, lets say 100 low income homes in a census block that lost power out of 1000. If the rest of the homes have higher median incomes, they would be portrayed as being part of the blackout when in reality they were not affected. A different solution would be using a stratified approach that better separates homes and income.</p>
+</section>
+<section id="references" class="level4">
+<h4 class="anchored" data-anchor-id="references">References</h4>
+<ol type="1">
+<li><p>United States Census Bureau. (2024). <em>American Community Survey (ACS)</em>. Census.gov. Retrieved from <a href="https://www.census.gov/programs-surveys/acs">https://www.census.gov/programs-surveys/acs</a></p></li>
+<li><p>Geofabrik GmbH. (2024). <em>Geofabrik Download Server</em>. Retrieved from <a href="https://download.geofabrik.de/">https://download.geofabrik.de/</a></p></li>
+<li><p>NASA. (2024). <em>LAADS DAAC: Level-1 and Atmosphere Archive &amp; Distribution System</em>. Retrieved from <a href="https://ladsweb.modaps.eosdis.nasa.gov/">https://ladsweb.modaps.eosdis.nasa.gov/</a></p></li>
+<li><p>United States Environmental Protection Agency. (2024). <em>Purposes and Uses of EJSCREEN</em>. EPA.gov. Retrieved from <a href="https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen">https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen</a></p></li>
+</ol>
 </section>
 </section>
 

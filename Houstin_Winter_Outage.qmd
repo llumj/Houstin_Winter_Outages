@@ -407,3 +407,12 @@ home_inc_aff + home_inc_no_aff
 
 Looking at the two histograms, it appears that there is really no difference when it comes to median household income by census block and blackouts. However, I think the way the data is being shown might have some limitations to answering the question posed. One of the main reasons being that census blocks might not be the best way to group the houses. It might actually skew the median household income for the bigger census blocks. For example, lets say 100 low income homes in a census block that lost power out of 1000. If the rest of the homes have higher median incomes, they would be portrayed as being part of the blackout when in reality they were not affected. A different solution would be using a stratified approach that better separates homes and income.
 
+#### References 
+
+1. United States Census Bureau. (2024). *American Community Survey (ACS)*. Census.gov. Retrieved from [https://www.census.gov/programs-surveys/acs](https://www.census.gov/programs-surveys/acs) 
+
+2. Geofabrik GmbH. (2024). *Geofabrik Download Server*. Retrieved from [https://download.geofabrik.de/](https://download.geofabrik.de/) 
+
+3. NASA. (2024). *LAADS DAAC: Level-1 and Atmosphere Archive & Distribution System*. Retrieved from [https://ladsweb.modaps.eosdis.nasa.gov/](https://ladsweb.modaps.eosdis.nasa.gov/)
+
+4. United States Environmental Protection Agency. (2024). *Purposes and Uses of EJSCREEN*. EPA.gov. Retrieved from [https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen](https://www.epa.gov/ejscreen/purposes-and-uses-ejscreen)
